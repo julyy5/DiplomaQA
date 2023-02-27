@@ -66,6 +66,15 @@ public class SQLHelper {
     }
 
     @SneakyThrows
+    public static String getCreditId() {
+        var getPaymentIdSQL = "SELECT credit_id  FROM order_entity ORDER BY created DESC LIMIT 1";
+        try (var connection = getConn()) {
+            var paymentId = runner.query(connection, getPaymentIdSQL, new ScalarHandler<String>());
+            return paymentId;
+        }
+    }
+
+    @SneakyThrows
     public static String getAmount() {
         var getAmountSQL = "SELECT amount FROM payment_entity ORDER BY created DESC LIMIT 1";
         try (var connection = getConn()) {

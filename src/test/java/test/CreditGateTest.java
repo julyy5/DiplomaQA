@@ -30,42 +30,80 @@ public class CreditGateTest {
         dbCleanData();
     }
 
-    @SneakyThrows
+
     @Test
-    @DisplayName("Кредит по валидной карте")
-    public void creditValidCard() {
+    @DisplayName("Кредит по валидной карте, проверка всплывающего сообщения")
+    public void creditValidCardMessage() {
         var PayByCredit = new CreditGate();
         var info = approvedCard();
         PayByCredit.sendingData(info);
         $(".notification__title").shouldHave(Condition.exactText("Успешно"), Duration.ofSeconds(25));
         $(".notification__content").shouldHave(Condition.exactText("Операция одобрена Банком."), Duration.ofSeconds(25));
         $(".notification_status_ok").shouldBe(Condition.visible);
-        TimeUnit.SECONDS.sleep(15);
-        var actualCreditStatus = SQLHelper.getCreditStatus();
-        var expectedCreditStatus = "APPROVED";
-        assertEquals(expectedCreditStatus, actualCreditStatus);
-        var expectedBankId = SQLHelper.getBankId();
-        var actualPaymentId = SQLHelper.getPaymentId();
-        assertEquals(expectedBankId, actualPaymentId);
     }
 
     @SneakyThrows
     @Test
-    @DisplayName("Кредит невалидной картой")
-    public void payInvalidCard() {
+    @DisplayName("Кредит по валидной карте, проверка статуса платежа в БД")
+    public void creditValidCardStatus() {
+        var PayByCredit = new CreditGate();
+        var info = approvedCard();
+        PayByCredit.sendingData(info);
+        TimeUnit.SECONDS.sleep(15);
+        var actualCreditStatus = SQLHelper.getCreditStatus();
+        var expectedCreditStatus = "APPROVED";
+        assertEquals(expectedCreditStatus, actualCreditStatus);
+    }
+
+    @SneakyThrows
+    @Test
+    @DisplayName("Кредит по валидной карте, проверка соотвествия Id в БД")
+    public void creditValidCardId() {
+        var PayByCredit = new CreditGate();
+        var info = approvedCard();
+        PayByCredit.sendingData(info);
+        TimeUnit.SECONDS.sleep(15);
+        var expectedBankId = SQLHelper.getBankId();
+        var actualCreditId = SQLHelper.getCreditId();
+        assertEquals(expectedBankId, actualCreditId);
+    }
+
+    @Test
+    @DisplayName("Кредит невалидной картой, проверка всплывающего сообщения")
+    public void payInvalidCardMessage() {
         var PayByDeclinedCredit = new CreditGate();
         var info = declinedCard();
         PayByDeclinedCredit.sendingData(info);
         $(".notification_status_error .notification__title").shouldHave(Condition.exactText("Ошибка"), Duration.ofSeconds(25));
         $(".notification_status_error .notification__content").shouldHave(Condition.exactText("Ошибка! Банк отказал в проведении операции."), Duration.ofSeconds(25));
         $(".notification_status_error").shouldBe(Condition.visible);
+    }
+
+
+    @SneakyThrows
+    @Test
+    @DisplayName("Кредит невалидной картой, проверка статуса платежа в БД")
+    public void payInvalidCardStatus() {
+        var PayByDeclinedCredit = new CreditGate();
+        var info = declinedCard();
+        PayByDeclinedCredit.sendingData(info);
         TimeUnit.SECONDS.sleep(15);
         var actualCreditStatus = SQLHelper.getCreditStatus();
         var expectedCreditStatus = "DECLINED";
         assertEquals(expectedCreditStatus, actualCreditStatus);
+    }
+
+    @SneakyThrows
+    @Test
+    @DisplayName("Кредит невалидной картой, проверка соответствия Id платежа в БД")
+    public void payInvalidCardId() {
+        var PayByDeclinedCredit = new CreditGate();
+        var info = declinedCard();
+        PayByDeclinedCredit.sendingData(info);
+        TimeUnit.SECONDS.sleep(15);
         var expectedBankId = SQLHelper.getBankId();
-        var actualPaymentId = SQLHelper.getPaymentId();
-        assertEquals(expectedBankId, actualPaymentId);
+        var actualCreditId = SQLHelper.getCreditId();
+        assertEquals(expectedBankId, actualCreditId);
     }
 
     @Test
@@ -90,7 +128,16 @@ public class CreditGateTest {
     }
 
     @Test
-    @DisplayName("Несуществующий месяц")
+    @DisplayName("Оплата просроченной на месяц картой")
+    public void payMinusMonthCard() {
+        var PayByMinusMonthCard = new CreditGate();
+        var info = minusMonthData();
+        PayByMinusMonthCard.sendingData(info);
+        $x("//*[text()='Месяц']/..//*[@class='input__sub']").shouldHave(Condition.exactText("Неверно указан срок действия карты"), Duration.ofSeconds(15));
+    }
+
+    @Test
+    @DisplayName("Месяц верхнее граничное значение >12")
     public void payInvalidMonth() {
         var PayByInvalidMonth = new CreditGate();
         var info = invalidMonthData();
@@ -99,7 +146,7 @@ public class CreditGateTest {
     }
 
     @Test
-    @DisplayName("Несуществующий месяц '00'")
+    @DisplayName("Месяц нижнее граничное значение '00'")
     public void payNullMonth() {
         var PayByNullMonth = new CreditGate();
         var info = emptyMonthData();
@@ -110,9 +157,9 @@ public class CreditGateTest {
     @Test
     @DisplayName("Месяц одной цифрой")
     public void payOneMonth() {
-        var PayByNullMonth = new CreditGate();
+        var PayByOneMonth = new CreditGate();
         var info = oneMonthData();
-        PayByNullMonth.sendingData(info);
+        PayByOneMonth.sendingData(info);
         $x("//*[text()='Месяц']/..//*[@class='input__sub']").shouldHave(Condition.exactText("Неверный формат"), Duration.ofSeconds(15));
     }
 
@@ -137,9 +184,9 @@ public class CreditGateTest {
     @Test
     @DisplayName("Год одной цифрой")
     public void payOneYear() {
-        var PayByNullYear = new CreditGate();
+        var PayByOneYear = new CreditGate();
         var info = oneYearData();
-        PayByNullYear.sendingData(info);
+        PayByOneYear.sendingData(info);
         $x("//*[text()='Год']/..//*[@class='input__sub']").shouldHave(Condition.exactText("Неверный формат"), Duration.ofSeconds(15));
     }
 
@@ -154,10 +201,28 @@ public class CreditGateTest {
 
     @Test
     @DisplayName("Символы в поле 'Владелец'")
-    public void payInvalidCardHolder() {
-        var PayByNullYear = new CreditGate();
-        var info = invalidCardHolder();
-        PayByNullYear.sendingData(info);
+    public void paySymbolCardHolder() {
+        var PayBySymbolCardHolder = new CreditGate();
+        var info = symbolCardHolder();
+        PayBySymbolCardHolder.sendingData(info);
+        $x("//*[text()=\"Владелец\"]/..//span/input").shouldHave(Condition.exactText("Неверный формат"), Duration.ofSeconds(15));
+    }
+
+    @Test
+    @DisplayName("Цифры в поле 'Владелец'")
+    public void payNumeralCardHolder() {
+        var PayNumeralCardHolder = new CreditGate();
+        var info = numeralCardHolder();
+        PayNumeralCardHolder.sendingData(info);
+        $x("//*[text()=\"Владелец\"]/..//span/input").shouldHave(Condition.exactText("Неверный формат"), Duration.ofSeconds(15));
+    }
+
+    @Test
+    @DisplayName("Кириллица в поле 'Владелец'")
+    public void payCyrillicCardHolder() {
+        var PayByCyrillicCardHolder = new CreditGate();
+        var info = cyrillicCardHolder();
+        PayByCyrillicCardHolder.sendingData(info);
         $x("//*[text()=\"Владелец\"]/..//span/input").shouldHave(Condition.exactText("Неверный формат"), Duration.ofSeconds(15));
     }
 
@@ -174,7 +239,7 @@ public class CreditGateTest {
     }
 
     @Test
-    @DisplayName("Не заполнять поле 'Номер карты'")
+    @DisplayName("Не заполнять только поле 'Номер карты'")
     public void emptyCardNumber() {
         var PayByEmptyCardNumber = new CreditGate();
         var info = approvedCard();
@@ -183,7 +248,7 @@ public class CreditGateTest {
     }
 
     @Test
-    @DisplayName("Не заполнять поле 'Месяц'")
+    @DisplayName("Не заполнять только поле 'Месяц'")
     public void emptyMonth() {
         var PayByEmptyMonth = new CreditGate();
         var info = approvedCard();
@@ -192,7 +257,7 @@ public class CreditGateTest {
     }
 
     @Test
-    @DisplayName("Не заполнять поле 'Год'")
+    @DisplayName("Не заполнять только поле 'Год'")
     public void emptyYear() {
         var PayByEmptyYear = new CreditGate();
         var info = approvedCard();
@@ -201,7 +266,7 @@ public class CreditGateTest {
     }
 
     @Test
-    @DisplayName("Не заполнять поле 'Владелец'")
+    @DisplayName("Не заполнять только поле 'Владелец'")
     public void emptyCardHolder() {
         var PayByEmptyCardHolder = new CreditGate();
         var info = approvedCard();
@@ -210,7 +275,7 @@ public class CreditGateTest {
     }
 
     @Test
-    @DisplayName("Не заполнять поле 'CVC/CVV'")
+    @DisplayName("Не заполнять только поле 'CVC/CVV'")
     public void emptyCVC() {
         var PayByEmptyCVC = new CreditGate();
         var info = approvedCard();

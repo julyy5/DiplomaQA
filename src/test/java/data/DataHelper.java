@@ -52,6 +52,7 @@ public class DataHelper {
         return new CardInfo(invalidCard, validMonth(), validYear(), validCardHolder(), validCVC());
     }
 
+
     //Неизвестный номер карты
     private static final String failCardData = "4444 4444 4444 4444";
 
@@ -64,6 +65,15 @@ public class DataHelper {
 
     public static CardInfo invalidCard() {
         return new CardInfo(invalidCardData, validMonth(), validYear(), validCardHolder(), validCVC());
+    }
+
+    //Один месяц назад
+    private static String minusMonth() {
+        return LocalDate.now().minusMonths(1).format(DateTimeFormatter.ofPattern("MM"));
+    }
+
+    public static CardInfo minusMonthData() {
+        return new CardInfo(validCard, minusMonth(), validYear(), validCardHolder(), validCVC());
     }
 
     //Несуществующий месяц
@@ -98,7 +108,7 @@ public class DataHelper {
 
     //Год в будущем
     private static String plusYear() {
-        return LocalDate.now().plusYears(70).format(DateTimeFormatter.ofPattern("yy"));
+        return LocalDate.now().plusYears(6).format(DateTimeFormatter.ofPattern("yy"));
     }
 
     public static CardInfo plusYearData() {
@@ -124,12 +134,28 @@ public class DataHelper {
         return new CardInfo(validCard, validMonth(), validYear(), validCardHolder(), invalidCVC());
     }
 
-    //Символы в поле "Владелец"
+    //Данные для валидации поля "Владелец"
     private static String symbol = "!@#$%^&+=";
 
-    public static CardInfo invalidCardHolder() {
+    public static CardInfo symbolCardHolder() {
         return new CardInfo(validCard, validMonth(), validYear(), symbol, validCVC());
     }
+
+    private static String numeral = "1234567890";
+
+    public static CardInfo numeralCardHolder() {
+        return new CardInfo(validCard, validMonth(), validYear(), numeral, validCVC());
+    }
+
+    private static String cyrillic() {
+        Faker faker = new Faker(new Locale("RU"));
+        return faker.name().firstName() + " " + faker.name().lastName();
+    }
+
+    public static CardInfo cyrillicCardHolder() {
+        return new CardInfo(validCard, validMonth(), validYear(), cyrillic(), validCVC());
+    }
+
 }
 
 

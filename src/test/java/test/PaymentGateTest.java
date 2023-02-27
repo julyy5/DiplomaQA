@@ -1,6 +1,7 @@
 package test;
 
 import com.codeborne.selenide.Condition;
+import data.DataHelper;
 import data.SQLHelper;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterAll;
@@ -28,21 +29,38 @@ public class PaymentGateTest {
         dbCleanData();
     }
 
-
-    @SneakyThrows
     @Test
-    @DisplayName("Оплата по валидной карте")
-    public void payValidCard() {
+    @DisplayName("Оплата по валидной карте, проверка всплывающего сообщения")
+    public void payValidCardMessage() {
         var PayByCard = new PaymentGate();
         var info = approvedCard();
         PayByCard.sendingData(info);
         $(".notification__title").shouldHave(Condition.exactText("Успешно"), Duration.ofSeconds(25));
         $(".notification__content").shouldHave(Condition.exactText("Операция одобрена Банком."), Duration.ofSeconds(25));
         $(".notification_status_ok").shouldBe(Condition.visible);
+    }
+
+    @SneakyThrows
+    @Test
+    @DisplayName("Оплата по валидной карте, проверка статуса в бд")
+    public void payValidCardStatus() {
+        var PayByCard = new PaymentGate();
+        var info = approvedCard();
+        PayByCard.sendingData(info);
         TimeUnit.SECONDS.sleep(15);
         var actualPaymentStatus = SQLHelper.getPaymentStatus();
         var expectedPaymentStatus = "APPROVED";
         assertEquals(expectedPaymentStatus, actualPaymentStatus);
+    }
+
+    @SneakyThrows
+    @Test
+    @DisplayName("Оплата по валидной карте, проверка соответствия id в бд")
+    public void payValidCardId() {
+        var PayByCard = new PaymentGate();
+        var info = approvedCard();
+        PayByCard.sendingData(info);
+        TimeUnit.SECONDS.sleep(15);
         var expectedTransactionId = SQLHelper.getTransactionId();
         var actualPaymentId = SQLHelper.getPaymentId();
         assertEquals(expectedTransactionId, actualPaymentId);
@@ -50,21 +68,65 @@ public class PaymentGateTest {
 
     @SneakyThrows
     @Test
-    @DisplayName("Оплата невалидной картой")
-    public void payDeclinedCard() {
+    @DisplayName("Оплата по валидной карте, проверка соответствия заявленой на сайте суммы платежа с суммой из БД")
+    public void payValidCardAmount() {
+        var PayByCard = new PaymentGate();
+        var info = approvedCard();
+        PayByCard.sendingData(info);
+        TimeUnit.SECONDS.sleep(15);
+        var expectedAmount = 45000;
+        var actualAmount = SQLHelper.getAmount();
+        assertEquals(expectedAmount, actualAmount);
+    }
+
+    @Test
+    @DisplayName("Оплата невалидной картой, проверка всплывающего сообщения")
+    public void payDeclinedCardMessage() {
         var PayByDeclinedCard = new PaymentGate();
         var info = declinedCard();
         PayByDeclinedCard.sendingData(info);
         $(".notification_status_error .notification__title").shouldHave(Condition.exactText("Ошибка"), Duration.ofSeconds(25));
         $(".notification_status_error .notification__content").shouldHave(Condition.exactText("Ошибка! Банк отказал в проведении операции."), Duration.ofSeconds(25));
         $(".notification_status_error").shouldBe(Condition.visible);
+    }
+
+    @SneakyThrows
+    @Test
+    @DisplayName("Оплата невалидной картой, проверка статуса в БД")
+    public void payDeclinedCardStatus() {
+        var PayByDeclinedCard = new PaymentGate();
+        var info = declinedCard();
+        PayByDeclinedCard.sendingData(info);
         TimeUnit.SECONDS.sleep(15);
         var actualPaymentStatus = SQLHelper.getPaymentStatus();
         var expectedPaymentStatus = "DECLINED";
         assertEquals(expectedPaymentStatus, actualPaymentStatus);
+    }
+
+    @SneakyThrows
+    @Test
+    @DisplayName("Оплата невалидной картой, проверка соответствия id в бд")
+    public void payDeclinedCardId() {
+        var PayByDeclinedCard = new PaymentGate();
+        var info = declinedCard();
+        PayByDeclinedCard.sendingData(info);
+        TimeUnit.SECONDS.sleep(15);
         var expectedTransactionId = SQLHelper.getTransactionId();
         var actualPaymentId = SQLHelper.getPaymentId();
         assertEquals(expectedTransactionId, actualPaymentId);
+    }
+
+    @SneakyThrows
+    @Test
+    @DisplayName("Оплата невалидной картой, проверка соответствия заявленой на сайте суммы платежа с суммой из БД")
+    public void payDeclinedCardAmount() {
+        var PayByDeclinedCard = new PaymentGate();
+        var info = declinedCard();
+        PayByDeclinedCard.sendingData(info);
+        TimeUnit.SECONDS.sleep(15);
+        var expectedAmount = 45000;
+        var actualAmount = SQLHelper.getAmount();
+        assertEquals(expectedAmount, actualAmount);
     }
 
     @Test
@@ -89,7 +151,16 @@ public class PaymentGateTest {
     }
 
     @Test
-    @DisplayName("Несуществующий месяц >12")
+    @DisplayName("Оплата просроченной на месяц картой")
+    public void payMinusMonthCard() {
+        var PayByMinusMonthCard = new PaymentGate();
+        var info = minusMonthData();
+        PayByMinusMonthCard.sendingData(info);
+        $x("//*[text()='Месяц']/..//*[@class='input__sub']").shouldHave(Condition.exactText("Неверно указан срок действия карты"), Duration.ofSeconds(15));
+    }
+
+    @Test
+    @DisplayName("Месяц верхнее граничное значение >12")
     public void payInvalidMonth() {
         var PayByInvalidMonth = new PaymentGate();
         var info = invalidMonthData();
@@ -98,7 +169,7 @@ public class PaymentGateTest {
     }
 
     @Test
-    @DisplayName("Несуществующий месяц '00'")
+    @DisplayName("Месяц нижнее граничное значение '00'")
     public void payNullMonth() {
         var PayByNullMonth = new PaymentGate();
         var info = emptyMonthData();
@@ -109,9 +180,9 @@ public class PaymentGateTest {
     @Test
     @DisplayName("Месяц одной цифрой")
     public void payOneMonth() {
-        var PayByNullMonth = new PaymentGate();
+        var PayByOneMonth = new PaymentGate();
         var info = oneMonthData();
-        PayByNullMonth.sendingData(info);
+        PayByOneMonth.sendingData(info);
         $x("//*[text()='Месяц']/..//*[@class='input__sub']").shouldHave(Condition.exactText("Неверный формат"), Duration.ofSeconds(15));
     }
 
@@ -136,18 +207,36 @@ public class PaymentGateTest {
     @Test
     @DisplayName("Год одной цифрой")
     public void payOneYear() {
-        var PayByNullYear = new PaymentGate();
+        var PayByOneYear = new PaymentGate();
         var info = oneYearData();
-        PayByNullYear.sendingData(info);
+        PayByOneYear.sendingData(info);
         $x("//*[text()='Год']/..//*[@class='input__sub']").shouldHave(Condition.exactText("Неверный формат"), Duration.ofSeconds(15));
     }
 
     @Test
     @DisplayName("Символы в поле 'Владелец'")
-    public void payInvalidCardHolder() {
-        var PayByNullYear = new PaymentGate();
-        var info = invalidCardHolder();
-        PayByNullYear.sendingData(info);
+    public void paySymbolCardHolder() {
+        var PayBySymbolCardHolder = new PaymentGate();
+        var info = symbolCardHolder();
+        PayBySymbolCardHolder.sendingData(info);
+        $x("//*[text()=\"Владелец\"]/..//span/input").shouldHave(Condition.exactText("Неверный формат"), Duration.ofSeconds(15));
+    }
+
+    @Test
+    @DisplayName("Цифры в поле 'Владелец'")
+    public void payNumeralCardHolder() {
+        var PayByNumeralCardHolder = new PaymentGate();
+        var info = numeralCardHolder();
+        PayByNumeralCardHolder.sendingData(info);
+        $x("//*[text()=\"Владелец\"]/..//span/input").shouldHave(Condition.exactText("Неверный формат"), Duration.ofSeconds(15));
+    }
+
+    @Test
+    @DisplayName("Кириллица в поле 'Владелец'")
+    public void payCyrillicCardHolder() {
+        var PayByCyrillicCardHolder = new PaymentGate();
+        var info = cyrillicCardHolder();
+        PayByCyrillicCardHolder.sendingData(info);
         $x("//*[text()=\"Владелец\"]/..//span/input").shouldHave(Condition.exactText("Неверный формат"), Duration.ofSeconds(15));
     }
 
