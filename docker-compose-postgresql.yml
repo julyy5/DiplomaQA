@@ -1,0 +1,19 @@
+version: '3.1'
+services:
+
+  gate-simulator:
+    build: .
+    image: gate-simulator:1.0
+    ports:
+      - '9999:9999'
+
+
+  postgresql:
+    image: postgres:12-alpine
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_DB=postgresql_db
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=82mREcvXDs9Gk89Eff4E
+

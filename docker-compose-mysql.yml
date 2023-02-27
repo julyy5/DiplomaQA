@@ -18,12 +18,4 @@ services:
       - MYSQL_USER=user
       - MYSQL_PASSWORD=82mREcvXDs9Gk89Eff4E
 
-  postgresql:
-    image: postgres:12-alpine
-    ports:
-      - '5432:5432'
-    environment:
-      - POSTGRES_DB=postgresql_db
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=82mREcvXDs9Gk89Eff4E
 
