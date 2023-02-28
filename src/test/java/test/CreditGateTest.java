@@ -1,25 +1,27 @@
 package test;
 
-import data.SQLHelper;
-import org.junit.jupiter.api.AfterAll;
-import page.CreditGate;
 import com.codeborne.selenide.Condition;
+import com.codeborne.selenide.logevents.SelenideLogger;
+import data.SQLHelper;
+import io.qameta.allure.selenide.AllureSelenide;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import page.CreditGate;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-import static data.DataHelper.*;
-import static data.DataHelper.invalidCVCData;
 import static com.codeborne.selenide.Selenide.*;
-import static com.codeborne.selenide.Selenide.$x;
+import static data.DataHelper.*;
 import static data.SQLHelper.dbCleanData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CreditGateTest {
+    @BeforeAll
+    static void setUpAll() {
+        SelenideLogger.addListener("allure", new AllureSelenide());
+    }
+
     @BeforeEach
     void setup() {
         open("http://localhost:8080");
@@ -28,6 +30,10 @@ public class CreditGateTest {
     @AfterAll
     public static void cleanAllDataDB() {
         dbCleanData();
+    }
+    @AfterAll
+    static void tearDownAll() {
+        SelenideLogger.removeListener("allure");
     }
 
 

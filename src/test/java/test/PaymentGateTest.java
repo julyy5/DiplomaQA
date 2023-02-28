@@ -1,13 +1,11 @@
 package test;
 
 import com.codeborne.selenide.Condition;
-import data.DataHelper;
+import com.codeborne.selenide.logevents.SelenideLogger;
 import data.SQLHelper;
+import io.qameta.allure.selenide.AllureSelenide;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import page.PaymentGate;
 
 import java.time.Duration;
@@ -19,6 +17,11 @@ import static data.SQLHelper.dbCleanData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PaymentGateTest {
+    @BeforeAll
+    static void setUpAll() {
+        SelenideLogger.addListener("allure", new AllureSelenide());
+    }
+
     @BeforeEach
     void setup() {
         open("http://localhost:8080");
@@ -27,6 +30,11 @@ public class PaymentGateTest {
     @AfterAll
     public static void cleanAllDataDB() {
         dbCleanData();
+    }
+
+    @AfterAll
+    static void tearDownAll() {
+        SelenideLogger.removeListener("allure");
     }
 
     @Test
@@ -74,7 +82,7 @@ public class PaymentGateTest {
         var info = approvedCard();
         PayByCard.sendingData(info);
         TimeUnit.SECONDS.sleep(15);
-        var expectedAmount = 45000;
+        var expectedAmount = "45000";
         var actualAmount = SQLHelper.getAmount();
         assertEquals(expectedAmount, actualAmount);
     }
@@ -124,7 +132,7 @@ public class PaymentGateTest {
         var info = declinedCard();
         PayByDeclinedCard.sendingData(info);
         TimeUnit.SECONDS.sleep(15);
-        var expectedAmount = 45000;
+        var expectedAmount = "45000";
         var actualAmount = SQLHelper.getAmount();
         assertEquals(expectedAmount, actualAmount);
     }
