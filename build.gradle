@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'io.qameta.allure' version '2.9.6'
     id 'io.freefair.lombok' version '5.3.0'
 }
 
@@ -10,10 +11,25 @@ sourceCompatibility = 11
 compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
 
+allure {
+    version = '2.17.2'
+    useJUnit5 {
+        version = '2.17.2'
+    }
+}
+
+repositories {
+    mavenCentral()
+}
 
 dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2'
+    testImplementation 'com.codeborne:selenide:6.2.0'
+    testImplementation 'com.github.javafaker:javafaker:1.0.2'
+    testImplementation 'org.slf4j:slf4j-simple:1.7.33'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.0'
     testImplementation 'com.codeborne:selenide:5.19.0'
+    testImplementation 'io.qameta.allure:allure-selenide:2.16.1'
     testImplementation 'mysql:mysql-connector-java:8.0.22'
     testImplementation 'org.postgresql:postgresql:42.3.3'
     testImplementation 'com.github.javafaker:javafaker:1.0.2'
@@ -26,5 +42,4 @@ test {
     systemProperty 'datasource', System.getProperty('datasource', 'jdbc:mysql://localhost:3306/mysql_db')
     //systemProperty 'datasource', System.getProperty('datasource', 'jdbc:postgresql://localhost:5432/postgresql_db')
 }
-
 
