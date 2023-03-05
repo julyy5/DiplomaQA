@@ -82,7 +82,7 @@ public class PaymentGateTest {
         var info = approvedCard();
         PayByCard.sendingData(info);
         TimeUnit.SECONDS.sleep(15);
-        var expectedAmount = "45000";
+        String expectedAmount = "45000";
         var actualAmount = SQLHelper.getAmount();
         assertEquals(expectedAmount, actualAmount);
     }
@@ -132,7 +132,7 @@ public class PaymentGateTest {
         var info = declinedCard();
         PayByDeclinedCard.sendingData(info);
         TimeUnit.SECONDS.sleep(15);
-        var expectedAmount = "45000";
+        String expectedAmount = "45000";
         var actualAmount = SQLHelper.getAmount();
         assertEquals(expectedAmount, actualAmount);
     }

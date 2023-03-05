@@ -8,6 +8,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import static java.lang.System.getProperty;
+
 public class SQLHelper {
     private static QueryRunner runner = new QueryRunner();
 
@@ -15,9 +17,12 @@ public class SQLHelper {
 
     }
 
+    private static final String url = getProperty("datasource");
+    private static final String user = getProperty("user");
+    private static final String password = getProperty("password");
+
     private static Connection getConn() throws SQLException {
-        return DriverManager.getConnection("jdbc:mysql://localhost:3306/mysql_db", "user", "82mREcvXDs9Gk89Eff4E");
-        //return DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgresql_db", "user", "82mREcvXDs9Gk89Eff4E");
+        return DriverManager.getConnection(url, user, password);
     }
 
     @SneakyThrows
@@ -78,8 +83,9 @@ public class SQLHelper {
     public static String getAmount() {
         var getAmountSQL = "SELECT amount FROM payment_entity ORDER BY created DESC LIMIT 1";
         try (var connection = getConn()) {
-            var amountDB = runner.query(connection, getAmountSQL, new ScalarHandler<String>());
-            return amountDB;
+            var amountDB = runner.query(connection, getAmountSQL, new ScalarHandler<Integer>());
+            Integer.toString(amountDB);
+            return String.valueOf(amountDB);
         }
     }
 

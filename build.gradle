@@ -41,5 +41,7 @@ test {
     systemProperty 'selenide.headless', System.getProperty('selenide.headless')
     systemProperty 'datasource', System.getProperty('datasource', 'jdbc:mysql://localhost:3306/mysql_db')
     //systemProperty 'datasource', System.getProperty('datasource', 'jdbc:postgresql://localhost:5432/postgresql_db')
+    systemProperty 'user', System.getProperty('user',"user")
+    systemProperty 'password', System.getProperty('password',"82mREcvXDs9Gk89Eff4E")
 }
 
