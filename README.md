@@ -15,7 +15,7 @@
 2. Запустить Docker.
 3. Открыть скачанный проект в Intellij IDEA.
 4. В файле [*application.properties*](https://github.com/julyy5/DiplomaQA/blob/main/application.properties) раскомментировать строку с подключением к БД PostgreSQL, а строку подключения к БД MySQL наоборот закомментировать.
-5. В файле [*SQLHelper.java*](https://github.com/julyy5/DiplomaQA/blob/main/src/test/java/data/SQLHelper.java) аналогично раскомментировать строку с подключением к БД PostgreSQL, а строку подключения к БД MySQL наоборот закомментировать.
+5. В файле [*build.gradle*](https://github.com/julyy5/DiplomaQA/blob/main/build.gradle) аналогично раскомментировать строку с подключением к БД PostgreSQL, а строку подключения к БД MySQL наоборот закомментировать.
 6. В терминале Intellij IDEA запустить контейнеры с помощью команды `docker-compose -f docker-compose-postgresql.yml up`.
 8. Открыв новую вкладку терминала Intellij IDEA запустить SUT, при помощи команды `java -jar artifacts/aqa-shop.jar -P:jdbc.url=jdbc:postgresql://localhost:5432/postgresql_db`.
 9. Запустить автотесты в headless-режиме (без открытия браузера), используя команду `./gradlew clean test -D selenide.headless=true`.
